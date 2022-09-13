@@ -27,3 +27,7 @@ def load_json_and_return_pandas(load_path: str) -> pd.DataFrame:
     
 def get_pandas_and_save_ndjson(df: pd.DataFrame, save_path: str) -> None:   
     df.to_json(f'{save_path}', orient="records", lines=True)
+
+def load_csv_and_return_pandas(load_path: str) -> pd.DataFrame:
+    df = pd.read_csv(load_path)
+    return df

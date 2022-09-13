@@ -4,6 +4,8 @@ from itertools import permutations
 
 import pandas as pd
 
+from utils import file_handler as f_handler
+
 class GeneralPreprocessorForPairwiseInstances:
     def __init__(self, file_directories: list, corpus_type: str):
         self.file_directories = file_directories
@@ -33,14 +35,6 @@ class GeneralPreprocessorForPairwiseInstances:
             self.current_file_name = file_name
             self._read_file_and_append_raw_corpus()
 
-    def _preprocess_text(self, text):
-        text = text.replace("\n", " ")
-        text = text.replace("##", "")
-        text = text.encode('ascii', errors='ignore').decode()
-        
-        text = " ".join(text.split())
-        return text
-
     def _read_file_and_append_raw_corpus(self):
         return NotImplementedError
 
@@ -55,46 +49,81 @@ class GeneralPreprocessorForPairwiseInstances:
             self._permutate_distinct_and_relabel()
 
     def _rebuild_raw_corpus_by_slug(self):
-        for slug_label_text in self.raw_corpus:
-            self.raw_corpus_by_slug[slug_label_text[0]].append(
-                {
-                    'text': slug_label_text[2], 
-                    'label': slug_label_text[1],
-                    'slug_name': slug_label_text[0]
-                }
-            )
+        for instance in self.raw_corpus:
+            self.raw_corpus_by_slug[instance['slug_name']].append(instance)
     
     def _permutate_parallel_and_relabel(self):
         for slug in self.raw_corpus_by_slug.values():
             perms = permutations(slug, 2) 
-            for slug_slug in list(perms):
-                if slug_slug[0]['label'] > slug_slug[1]['label']:
+            for paired_instance in list(perms):
+                if paired_instance[0]['label'] > paired_instance[1]['label']:
                     difficult_text = 'text'
-                elif slug_slug[0]['label'] < slug_slug[1]['label']:
+                elif paired_instance[0]['label'] < paired_instance[1]['label']:
                     difficult_text = 'text_pair'
                 self.permutated_corpus.append(
                     {
-                        'slug_name': slug[0]['slug_name'],
-                        'text': slug[0]['text'],
-                        'text_pair': slug[1]['text'],
-                        'text_label': slug[0]['label'],
-                        'text_pair_label': slug[1]['label'],
+                        'slug_name': paired_instance[0]['slug_name'],
+                        'text': paired_instance[0]['text'],
+                        'text_pair': paired_instance[1]['text'],
+                        'text_label': paired_instance[0]['label'],
+                        'text_pair_label': paired_instance[1]['label'],
                         'difficult_text': difficult_text
                     }
                 )
 
     def _permutate_distinct_and_relabel(self):
-        return NotImplementedError
+        perms = permutations(self.raw_corpus, 2)
+        for paired_instance in list(perms):
+            if paired_instance[0]['label'] > paired_instance[1]['label']:
+                difficult_text = 'text'
+            elif paired_instance[0]['label'] < paired_instance[1]['label']:
+                difficult_text = 'text_pair'
+            else:
+                # skip paired_instances that have two same labels
+                continue
+            self.permutated_corpus.append(
+                {
+                    'text': paired_instance[0]['text'],
+                    'text_pair': paired_instance[1]['text'],
+                    'text_label': paired_instance[0]['label'],
+                    'text_pair_label': paired_instance[1]['label'],
+                    'difficult_text': difficult_text
+                }
+            )
+
+    def _preprocess_text(self, text):
+        text = text.replace("\n", " ")
+        text = text.replace("##", "")
+        text = text.replace("Intermediate","")
+        text = text.encode('ascii', errors='ignore').decode()
+        text = " ".join(text.split())
+        return text
 
     def _report_statistics(self):
         print(f"{type(self).__name__}: There is a total number of {len(self.raw_corpus)} files (or texts) in {self.file_directories}.\n")
         print(f"{type(self).__name__}: There is a total number of {len(self.raw_corpus_by_slug)} slugs in {self.file_directories}.\n")
         print(f"{type(self).__name__}: After permutation, there is a total number of {len(self.permutated_corpus)} pairwise instances in {self.file_directories}.\n")
 
-    def save_csv(self, path: str):
+    def save_csv(self, path: str, split: tuple = None, random_seed: int = 2022):
         df = pd.DataFrame(self.permutated_corpus)
-        df.to_csv(path, index = False)
+        f_handler.get_pandas_and_save_ndjson(df, path + '.json')
 
+        if split != None:
+            assert split[0] + split[1] + split[2] == 1, "check train/dev/test ratio"
+
+            ratio_train = split[0]
+            train_df = df.sample(frac = ratio_train, random_state = random_seed)
+            dev_test_df = df.drop(train_df.index)
+            
+            ratio_dev = split[1]/(1 - split[0])
+            dev_df = dev_test_df.sample(frac = ratio_dev, random_state = random_seed)
+            test_df = dev_test_df.drop(dev_df.index)
+
+            print(f"{type(self).__name__}: created splits of train - {len(train_df)}, dev - {len(dev_df)}, test - {len(test_df)},")
+
+            f_handler.get_pandas_and_save_ndjson(train_df, path + '_train' + '.json')
+            f_handler.get_pandas_and_save_ndjson(dev_df, path + '_dev' + '.json')
+            f_handler.get_pandas_and_save_ndjson(test_df, path + '_test' + '.json')
 
 class OneStopEnglishPreprocessorForPairwiseInstances(
     GeneralPreprocessorForPairwiseInstances
@@ -106,7 +135,11 @@ class OneStopEnglishPreprocessorForPairwiseInstances(
             text = file.read()
             text = self._preprocess_text(text)
         self.raw_corpus.append(
-            (slug_name, label, text)
+            {
+                'slug_name': slug_name,
+                'label': label, 
+                'text': text
+            }
         )
     
     def _map_label(self, label):
@@ -129,7 +162,11 @@ class NewselaPreprocessorForPairwiseInstances(
             text = file.read()
             text = self._preprocess_text(text)
         self.raw_corpus.append(
-            (slug_name, label, text)
+            {
+                'slug_name': slug_name,
+                'label': label, 
+                'text': text
+            }
         )
 
     def _map_label(self, label):
@@ -145,6 +182,56 @@ class NewselaPreprocessorForPairwiseInstances(
 
 
 
+class CommonCoreStandardsPreprocessorForPairwiseInstances(
+    GeneralPreprocessorForPairwiseInstances
+    ):
+    def _build_raw_corpus(self):
+        for file_directory in self.file_directories:
+            df = pd.read_csv(file_directory)
+            df = df[['Class', 'Text']]
+            df.columns = ['label', 'text']
+            df = self._map_label(df)
+            self.raw_corpus.extend(df.to_dict('records'))
+    
+    def _map_label(self, df):
+        mapper = {
+            "F": 5,
+            "E": 4,
+            "D": 3,
+            "C": 2,
+            "B": 1,
+            "A": 0
+        }
+        df['label'] = df['label'].map(mapper)
+        return df
+
+
+
+class CambridgeEnglishReadabilityPreprocessorForPairwiseInstances(
+    GeneralPreprocessorForPairwiseInstances
+    ):
+    def _read_file_and_append_raw_corpus(self):
+        label = self._map_label(self.current_file_directory[-4:-1])
+        with open (self.current_file_name, 'r') as file:
+            text = file.read()
+            text = self._preprocess_text(text)
+        self.raw_corpus.append(
+            {
+                'label': label, 
+                'text': text
+            }
+        )
+
+    def _map_label(self, label):
+        mapper = {
+            "CPE": 4,
+            "CAE": 3,
+            "FCE": 2,
+            "PET": 1,
+            "KET": 0
+        }
+        return mapper[label]
+
 if __name__ == "__main__":
     NewselaPreprocessor = NewselaPreprocessorForPairwiseInstances(
         file_directories = [
@@ -152,7 +239,10 @@ if __name__ == "__main__":
             ],
         corpus_type = "parallel"
         )
-    NewselaPreprocessor.save_csv('datasets/final_NEWS.csv')
+    NewselaPreprocessor.save_csv(
+        'datasets/final_NEWS',
+        split = (0.6,0.2,0.2)
+        )
 
     OneStopEnglishPreprocessor = OneStopEnglishPreprocessorForPairwiseInstances(
         file_directories = [
@@ -162,4 +252,27 @@ if __name__ == "__main__":
             ],
         corpus_type = "parallel"
         )
-    OneStopEnglishPreprocessor.save_csv('datasets/final_OSEN.csv')
+    OneStopEnglishPreprocessor.save_csv(
+        'datasets/final_OSEN',
+        split = (0.6,0.2,0.2)
+        )
+
+    CommonCoreStandardsPreprocessor = CommonCoreStandardsPreprocessorForPairwiseInstances(
+        file_directories = [
+            'datasets/CommonCoreStandards/Story.csv'
+            ],
+        corpus_type = "distinct"
+        )
+    CommonCoreStandardsPreprocessor.save_csv('datasets/final_CCSB')
+
+    CambridgeEnglishReadabilityPreprocessor = CambridgeEnglishReadabilityPreprocessorForPairwiseInstances(
+        file_directories = [
+            'datasets/CambridgeEnglishReadability/Readability_dataset/CAE/',
+            'datasets/CambridgeEnglishReadability/Readability_dataset/CPE/',
+            'datasets/CambridgeEnglishReadability/Readability_dataset/FCE/',
+            'datasets/CambridgeEnglishReadability/Readability_dataset/KET/',
+            'datasets/CambridgeEnglishReadability/Readability_dataset/PET/',
+            ],
+        corpus_type = "distinct"
+        )
+    CambridgeEnglishReadabilityPreprocessor.save_csv('datasets/final_CAMB')

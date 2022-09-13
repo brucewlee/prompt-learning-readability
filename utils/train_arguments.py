@@ -1,7 +1,7 @@
 def predefined_args(parser):
     parser.add_argument(
         '--epochs',
-        default=30,
+        default=3,
         type=int,
         help='(int) Number of training epochs'
         )
@@ -19,19 +19,19 @@ def predefined_args(parser):
         )
     parser.add_argument(
         '--model_name_or_path',
-        default="facebook/bart-base",
+        default="t5-base",
         type=str,
         help='(str) Name of transformers model - will use already pretrained model. Path of transformer model - will load your own model from local disk.'
         )
     parser.add_argument(
         '--dataset',
-        default='onestopenglish',
+        default='newsela',
         type=str,
-        help='(str) Train tsv/csv path.'
+        help='(str) onestopenglish or newsela'
         )
     parser.add_argument(
         '--tokenizer',
-        default="facebook/bart-base",
+        default="t5-base",
         type=str,
         help='Name of tokenizer'
         )

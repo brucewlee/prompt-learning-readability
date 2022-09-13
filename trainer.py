@@ -11,12 +11,12 @@ class TrainerForSeq2Seq:
         self,
         model: object,
         tokenizer: object,
-        train_dataloader: object,
-        eval_dataloader: object,
-        optimizer: object,
-        scheduler: object,
-        num_epochs: int,
-        device: torch.device,
+        train_dataloader: Optional[object]=None,
+        eval_dataloader: Optional[object]=None,
+        optimizer: Optional[object]=None,
+        scheduler: Optional[object]=None,
+        num_epochs: Optional[int]=None,
+        device: Optional[torch.device]=None,
         early_stop: bool = False,
         ) -> None:
 
@@ -31,12 +31,16 @@ class TrainerForSeq2Seq:
         self.early_stop = early_stop
 
         self.EarlyStopper = EarlyStopper("increase") 
-        self.TrainLogger = ClassificationLogger("TrainLogger", len(train_dataloader), self.num_epochs, 50)
+        self.TrainLogger = ClassificationLogger(
+            "news-Q-train-t5-base-1e-5-8-3", 
+            len(train_dataloader), 
+            self.num_epochs, 
+            50
+            )
 
     def train(
         self, 
         return_model: bool = False, 
-        return_loss: bool = False, 
         return_true_labels: bool = False, 
         return_pred_labels: bool = False
         ) -> Tuple[Optional[object], Optional[float], Optional[list], Optional[list]]:
@@ -69,19 +73,19 @@ class TrainerForSeq2Seq:
             if self.continue_train == False:
                 break
 
-        to_return = self.construct_return(return_model, return_loss, return_true_labels, return_pred_labels)
+        to_return = self.construct_return(return_model, return_true_labels, return_pred_labels)
         return to_return
     
     def validate(
         self,
-        return_loss: bool = False, 
         return_true_labels: bool = False, 
-        return_pred_labels: bool = False
+        return_pred_labels: bool = False,
+        mode: str = "valid"
         ) -> Tuple[Optional[float], Optional[list], Optional[list]]:
 
         """1. Start evaluation"""
         ValidLogger = ClassificationLogger(
-            name = "ValidLogger", 
+            name = f"news-Q-{mode}-t5-base-1e-5-8-3", 
             len_batch = len(self.eval_dataloader), 
             num_epochs = 1, 
             interval = 50
@@ -118,8 +122,8 @@ class TrainerForSeq2Seq:
                 pred_labels = self.pred_labels, 
                 true_labels = self.true_labels,
                 )
-            print(self.true_labels)
-            print(self.pred_labels)
+            #print(self.true_labels)
+            #print(self.pred_labels)
             
         f1, acc, prec, recl = ValidLogger.record_end_epoch(return_metric = True)
         if self.early_stop:
@@ -127,7 +131,7 @@ class TrainerForSeq2Seq:
         else:
             self.continue_train = True
 
-        to_return = self.construct_return(return_loss, return_true_labels, return_pred_labels)
+        to_return = self.construct_return(return_true_labels, return_pred_labels)
         return to_return
 
     def save(self, name) -> None:
@@ -136,7 +140,6 @@ class TrainerForSeq2Seq:
     def construct_return(
         self,
         return_model: bool = False, 
-        return_loss: bool = False, 
         return_true_labels: bool = False, 
         return_pred_labels: bool = False
         ) -> list:
@@ -144,8 +147,6 @@ class TrainerForSeq2Seq:
         to_return = {}
         if return_model:
             to_return['model'] = self.model
-        if return_loss:
-            to_return['loss'] = self.loss
         if return_true_labels:
             to_return['true_labels'] = self.true_labels
         if return_pred_labels:

@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
 from transformers import AutoConfig, AutoTokenizer, AutoModelForSeq2SeqLM, set_seed, AdamW, get_linear_schedule_with_warmup
 
-from dataset_constructor import OneStopEnglishDataset
+from dataset_constructor import OneStopEnglishDataset, NewselaDataset
 from trainer import TrainerForSeq2Seq
 from utils.train_arguments import predefined_args
 
@@ -57,13 +57,26 @@ if args.dataset == "onestopenglish":
         split = 'train',
         max_seq_length = args.max_seq_length,
         )
-    print(f'Created `train_dataset` of {args.dataset}, with {len(train_dataset)} examples!')
     valid_dataset = OneStopEnglishDataset(
         tokenizer = tokenizer,
         split = 'valid',
         max_seq_length = args.max_seq_length,
         )
-    print(f'Created `valid_dataset` of {args.dataset}, with {len(valid_dataset)} examples!')
+
+elif args.dataset == "newsela":
+    train_dataset = NewselaDataset(
+        tokenizer = tokenizer,
+        split = 'train',
+        max_seq_length = args.max_seq_length,
+        )
+    valid_dataset = NewselaDataset(
+        tokenizer = tokenizer,
+        split = 'valid',
+        max_seq_length = args.max_seq_length,
+        )
+
+print(f'Created `train_dataset` of {args.dataset}, with {len(train_dataset)} examples!')
+print(f'Created `valid_dataset` of {args.dataset}, with {len(valid_dataset)} examples!')
 
 train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 print(f'Created `train_dataloader` with {len(train_dataloader)} batches!')
@@ -97,4 +110,4 @@ trainer = TrainerForSeq2Seq(
 trainer.train()
 if args.save:
     name = args.model_name_or_path.replace('/','-')
-    trainer.save(f'{name}-{args.dataset}-{args.learning_rate}')
+    trainer.save(f'{name}-{args.dataset}-Q-{args.learning_rate}')
