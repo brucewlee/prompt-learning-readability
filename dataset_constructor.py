@@ -107,8 +107,8 @@ class DatasetForSeq2Seq(Dataset):
             'text_pair': 'Text 2'
         }# train"""
         label_mapper = {
-            'text': 'Text 1', 
-            'text_pair': 'Text 2'
+            'text': 'Text 2', 
+            'text_pair': 'Text 1'
         }# test"""
         return label_mapper[label]
 
@@ -121,7 +121,7 @@ class DatasetForSeq2Seq(Dataset):
             label = self._map_label(instance.label)
 
             """texts.append(f"Which Text is more difficult? Text 1: {text} Text 2: {text_pair}") # train"""
-            texts.append(f"Which Text is more difficult? Text 1: {text} Text 2: {text_pair}") # test"""
+            texts.append(f"Text 1: {text} Text 2: {text_pair} Easier:") # test"""
             labels.append(label)
         return texts, labels
 
@@ -289,7 +289,7 @@ class CommonCoreStandardsProcessor(GeneralProcessor):
         """Process Train Set"""
         return self._create_instances(
             self._read_csv(
-                "datasets/final_CCSB.json"
+                "datasets/final_CCSB_0_3.json"
                 )
         )
 
@@ -297,7 +297,7 @@ class CommonCoreStandardsProcessor(GeneralProcessor):
         """Process Valid Set"""
         return self._create_instances(
             self._read_csv(
-                "datasets/final_CCSB.json"
+                "datasets/final_CCSB_0_3.json"
                 )
         )
 
@@ -305,7 +305,7 @@ class CommonCoreStandardsProcessor(GeneralProcessor):
         """Process Test Set"""
         return self._create_instances(
             self._read_csv(
-                "datasets/final_CCSB.json"
+                "datasets/final_CCSB_0_3.json"
                 )
         )
 

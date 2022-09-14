@@ -13,19 +13,19 @@ def predefined_args(parser):
         )
     parser.add_argument(
         '--model_name_or_path',
-        default="ckpt/t5-base-newsela-Q-1e-05-3epochs",
+        default="ckpt/facebook-bart-base-onestopenglish-RF-1e-05-30epochs",
         type=str,
         help='(str) Name of transformers model - will use already pretrained model. Path of transformer model - will load your own model from local disk.'
         )
     parser.add_argument(
         '--dataset',
-        default='cambridge',
+        default='commoncore',
         type=str,
         help='(str) onestopenglish or newsela or cambridge or commoncore'
         )
     parser.add_argument(
         '--tokenizer',
-        default="t5-base",
+        default="facebook/bart-base",
         type=str,
         help='Name of tokenizer'
         )
