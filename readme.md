@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository hosts research code from our research paper "Prompt-based Learning for Text Readability Assessment" at (EACL 2023)[https://aclanthology.org/2023.findings-eacl.135/]. You can train and evaluate models using the code here. The included scripts are self-explanatory with comments for easy reading!
+This repository hosts research code from our research paper "Prompt-based Learning for Text Readability Assessment" at [EACL 2023](https://aclanthology.org/2023.findings-eacl.135/). You can train and evaluate models using the code here. The included scripts are self-explanatory with comments for easy reading!
 
 ## Installation
 
