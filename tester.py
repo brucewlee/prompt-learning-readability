@@ -27,7 +27,7 @@ class TesterForSeq2Seq:
 
         """1. Start evaluation"""
         TestLogger = ClassificationLogger(
-            name = f"ccsb-0-2-RF-test-bart-base-osen-1e-5-8-30", 
+            name = f"customizable", 
             len_batch = len(self.eval_dataloader), 
             num_epochs = 1, 
             interval = 50

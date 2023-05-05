@@ -243,19 +243,11 @@ class CambridgeEnglishReadabilityProcessor(GeneralProcessor):
 
     def get_train_instances(self):
         """Process Train Set"""
-        return self._create_instances(
-            self._read_csv(
-                "datasets/final_CAMB.json"
-                )
-        )
+        return NotImplementedError()
 
     def get_valid_instances(self):
         """Process Valid Set"""
-        return self._create_instances(
-            self._read_csv(
-                "datasets/final_CAMB.json"
-                )
-        )
+        return NotImplementedError()
 
     def get_test_instances(self):
         """Process Test Set"""
@@ -287,25 +279,17 @@ class CommonCoreStandardsProcessor(GeneralProcessor):
 
     def get_train_instances(self):
         """Process Train Set"""
-        return self._create_instances(
-            self._read_csv(
-                "datasets/final_CCSB_0_3.json"
-                )
-        )
+        return NotImplementedError()
 
     def get_valid_instances(self):
         """Process Valid Set"""
-        return self._create_instances(
-            self._read_csv(
-                "datasets/final_CCSB_0_3.json"
-                )
-        )
+        return NotImplementedError()
 
     def get_test_instances(self):
         """Process Test Set"""
         return self._create_instances(
             self._read_csv(
-                "datasets/final_CCSB_0_3.json"
+                "datasets/final_CCSB_0_2.json"
                 )
         )
 
