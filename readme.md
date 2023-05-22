@@ -4,22 +4,6 @@
 
 This repository hosts research code from our research paper "Prompt-based Learning for Text Readability Assessment" at [EACL 2023](https://aclanthology.org/2023.findings-eacl.135/). You can train and evaluate models using the code here. The included scripts are self-explanatory with comments for easy reading!
 
-## Installation
-
-Download Repo
-
-```bash
-git clone https://github.com/brucewlee/lingfeat
-```
-
-Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-Download Dataset
-unzip and place all in datasets/ directory
-
 ## Training
 
 Set arguments in utils/train_arguments.py
